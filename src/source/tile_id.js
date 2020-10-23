@@ -4,7 +4,7 @@ import {getTileBBox} from '@mapbox/whoots-js';
 import EXTENT from '../data/extent';
 import Point from '@mapbox/point-geometry';
 import MercatorCoordinate from '../geo/mercator_coordinate';
-
+import proj4 from 'proj4';
 import assert from 'assert';
 import {register} from '../util/web_worker_transfer';
 
@@ -31,6 +31,7 @@ export class CanonicalTileID {
     // given a list of urls, choose a url template and return a tile URL
     url(urls: Array<string>, scheme: ?string, transformBBOX: ?(str: string) => string) {
         const bbox = getTileBBox(this.x, this.y, this.z);
+        const bbox4326 = proj4(proj4.defs('EPSG:3857'), proj4.defs('EPSG:4326'), [thisx, this.y, this.z]);
         const quadkey = getQuadkey(this.z, this.x, this.y);
         if (!transformBBOX) transformBBOX = string => string;
 
@@ -40,6 +41,7 @@ export class CanonicalTileID {
             .replace('{x}', String(this.x))
             .replace('{y}', String(scheme === 'tms' ? (Math.pow(2, this.z) - this.y - 1) : this.y))
             .replace('{quadkey}', quadkey)
+            .replace('{bbox-epsg-4326}', bbox4326)
             .replace('{bbox-epsg-3857}', bbox)
             .replace('{bbox-transform}', transformBBOX(bbox));
     }
